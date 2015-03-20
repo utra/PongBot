@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 # Constants
 CUP_HEIGHT = 0.12 # metres
@@ -11,6 +12,7 @@ BALL_MASS = 0.0027 #kilograms
 # Parameters we can control
 height = 0.8 # metres
 r_wheel = 0.03 # metres
+epsilon = 0.001 # metres, millimeter accuracy
 
 def max_distance(init_vel):
     theta = optimal_angle(init_vel)
@@ -28,9 +30,11 @@ def optimal_angle(init_vel):
     Calculate the angle yielding the largest distance
     '''
     # Interestingly enough, this doesn't change with air resistance
-    return math.acos((2*G*(height-CUP_HEIGHT) + init_vel)/(2*G*(height-CUP_HEIGHT) + 2*init_vel))
+    optimal_angle = math.acos(math.sqrt((2*G*(height-CUP_HEIGHT) + init_vel**2)/(2*G*(height-CUP_HEIGHT) + 2*init_vel**2)))
+    print 'Optimal angle', optimal_angle/math.pi*180
+    return optimal_angle
 
-def simulate_flight(init_vel, theta, dt = 0.0001):
+def simulate_flight(init_vel, theta, dt = 0.0001, verbose=False):
     '''
     Simulate the flight of the ball with air resistance
     '''
@@ -58,14 +62,74 @@ def simulate_flight(init_vel, theta, dt = 0.0001):
             vel[1] += (-G + DRAG_FORCE*vel[1]**2/BALL_MASS)*dt
         t += dt
 
-    print("Landed", pos[0], "metres away")
-    print("Flew for", t, "seconds")
-    # Plot the trajectory
-    plt.plot(xs, ys)
-    plt.show()
+    if verbose:
+        # Print out details of flight and show plot
+        print 'Printing verbose trajectory output'
+        print 'Flight time:', t, 'seconds'
+        print 'Max height:', max(ys), 'metres'
+        print 'Distance:', xs[-1], 'metres'
+        plt.plot(xs, ys)
+        plt.xlabel('Distance (m)')
+        plt.ylabel('Height (m)')
+        plt.show()
 
-# Run simulation for theta going from 0.1 to 1 radians
-for theta in range(10, 100, 5):
-    theta = theta/100.
-    print 'Theta:', theta
-    simulate_flight(6.0, theta) 
+    return xs[-1]
+
+def get_angle(distance, v_max):
+    '''
+    For a given distance, find the angle required to shoot there
+    shooting at the highest velocity. Uses successive bisection 
+    and simulation, since inverting the distance function is hard
+    with air drag in the mix.
+    '''
+
+    theta_min = optimal_angle(v_max)
+    theta_max = 1.5 # radians
+    theta = theta_max
+    projected_distance = -1000 # dummy value
+
+    # Shooting too far
+    if (simulate_flight(v_max, theta_min) < distance):
+        print "Sorry, can't shoot that far for that v_max"
+        return -1
+
+    # Loop, bisecting, until the distance converges
+    while (abs(projected_distance - distance) > epsilon):
+        projected_distance_min = simulate_flight(v_max, theta_min)
+        projected_distance_max = simulate_flight(v_max, theta_max)
+        # Make sure we can bisect, distance falls in between
+        if (projected_distance_min > distance > projected_distance_max):
+            if abs(projected_distance_min - distance) < \
+                abs(projected_distance_max - distance):
+                # Theta min gets you closer
+                projected_distance = projected_distance_min
+                theta = theta_min
+                theta_max = (theta_min + theta_max)/2.
+            else:
+                # Theta max gets you closer
+                projected_distance = projected_distance_max
+                theta = theta_max
+                theta_min = (theta_min + theta_max)/2.
+        # If we can't bisect, change the bounds
+        else:
+            if (projected_distance_min < distance):
+                theta_min -= 0.01
+            elif (projected_distance_max > distance):
+                theta_max += 0.01
+
+    return theta
+
+if __name__ == "__main__":
+    if (len(sys.argv) == 3):
+        distance = float(sys.argv[1])
+        v_max = float(sys.argv[2])
+        print 'Distance:', distance
+        print 'Maximum velocity:', v_max
+        # Run simulation for theta going from 0.1 to 1 radians
+        theta = get_angle(distance, v_max)
+        if theta != -1:
+            print 'Theta:', theta/math.pi*180, 'degrees'
+            simulate_flight(v_max, theta, verbose=True)
+    else: 
+        print 'To run the program, enter "python trajectory.py <distance> <v_max>"'
+
