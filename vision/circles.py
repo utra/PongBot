@@ -29,7 +29,7 @@ def findcircles(img_name, min_rad, max_rad, min_dist):
     #create new grayscale version of image to draw circles on
     
     circles = cv2.HoughCircles(img, cv2.cv.CV_HOUGH_GRADIENT, 0.1, min_dist,
-                               param1=50, param2=30,
+                               param1=50, param2=50,
                                minRadius=min_rad, maxRadius=max_rad)
     # make an array of the circles detected in the image, finding (x, y, r)
     
@@ -61,7 +61,7 @@ def findclosestcircle(img_name, min_rad, max_rad, min_dist):
     circles = image[0]
     gray = image[1]
     
-    if circles == None:
+    if len(circles) == 0:
         raise Exception('No circles found.')
     
     for (x, y, r), i in zip(circles, range(1, len(circles) + 1)):
