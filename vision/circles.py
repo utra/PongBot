@@ -31,7 +31,8 @@ def findcircles(img_name, min_rad, max_rad, min_dist):
     circles = cv2.HoughCircles(img, cv2.cv.CV_HOUGH_GRADIENT, 0.1, min_dist,
                                param1=50, param2=50,
                                minRadius=min_rad, maxRadius=max_rad)
-    # make an array of the circles detected in the image, finding (x, y, r)
+    # make an array of the circles detected in the image, finding (x, y, r
+    # param2 is the threshold value)
     
     # round values to ints
     circles = np.round(circles[0, :]).astype('int') if not \
