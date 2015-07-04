@@ -1,3 +1,8 @@
+'''
+This program computes the firing angle above the horizontal needed to hit
+a target a given distance away, subject to the constraint of firing speed.
+'''
+
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,7 +21,7 @@ epsilon = 0.001 # metres, millimeter accuracy
 
 def max_distance(init_vel):
     theta = optimal_angle(init_vel)
-    print("Optimal angle", theta/math.pi*180)
+    print("Optimal angle:", theta/math.pi*180, "degrees")
     distance = init_vel*math.cos(theta)/G*(init_vel*math.sin(theta) + \
             math.sqrt(init_vel**2*math.sin(theta)**2 + 2*G*(height - CUP_HEIGHT)))
     print("Range", distance)
@@ -31,7 +36,7 @@ def optimal_angle(init_vel):
     '''
     # Interestingly enough, this doesn't change with air resistance
     optimal_angle = math.acos(math.sqrt((2*G*(height-CUP_HEIGHT) + init_vel**2)/(2*G*(height-CUP_HEIGHT) + 2*init_vel**2)))
-    print 'Optimal angle', optimal_angle/math.pi*180
+    print 'Optimal angle:', optimal_angle/math.pi*180, "degrees"
     return optimal_angle
 
 def simulate_flight(init_vel, theta, dt = 0.0001, verbose=False):
@@ -123,13 +128,13 @@ if __name__ == "__main__":
     if (len(sys.argv) == 3):
         distance = float(sys.argv[1])
         v_max = float(sys.argv[2])
-        print 'Distance:', distance
-        print 'Maximum velocity:', v_max
+        print 'Distance:', distance, 'metres'
+        print 'Maximum velocity:', v_max, 'metres/second'
         # Run simulation for theta going from 0.1 to 1 radians
         theta = get_angle(distance, v_max)
         if theta != -1:
-            print 'Theta:', theta/math.pi*180, 'degrees'
-            simulate_flight(v_max, theta, verbose=True)
+            print 'Firing angle:', theta/math.pi*180, 'degrees above the horizontal'
+            simulate_flight(v_max, theta, verbose=False)
     else: 
         print 'To run the program, enter "python trajectory.py <distance> <v_max>"'
 
