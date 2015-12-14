@@ -5,6 +5,7 @@ a target a given distance away, subject to the constraint of firing speed.
 
 import math
 import numpy as np
+from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import sys
 
@@ -15,7 +16,7 @@ G = 9.81 # metres/second^2
 BALL_MASS = 0.0027 #kilograms
 
 # Parameters we can control
-height = 0.8 # metres
+height = 0.350 # metres
 r_wheel = 0.03 # metres
 epsilon = 0.001 # metres, millimeter accuracy
 
@@ -128,6 +129,12 @@ if __name__ == "__main__":
     if (len(sys.argv) == 3):
         distance = float(sys.argv[1])
         v_max = float(sys.argv[2])
+
+        def simulate(theta):
+            return -simulate_flight(v_max, theta)
+
+        print minimize(simulate, 0.5)
+
         print 'Distance:', distance, 'metres'
         print 'Maximum velocity:', v_max, 'metres/second'
         # Run simulation for theta going from 0.1 to 1 radians
