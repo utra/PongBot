@@ -50,6 +50,8 @@ void initialize_sweep() {
 
 // Function to sweep from left to right. Returns [distance, angle] of closest cup
 float *perform_sweep() {
+  Serial.println("Sweeping");
+  
   // initialize variables to keep track of
   float *closest_cup = (float *) malloc(sizeof(float) * 2);
   closest_cup[0] = 100000;
@@ -63,6 +65,7 @@ float *perform_sweep() {
     
     // Read from lidar
     int reading = read_lidar();
+    Serial.println(reading);
 
       // Check if reading is closer than what we've seen  
       if (reading < closest_cup[0]) {
@@ -77,27 +80,30 @@ float *perform_sweep() {
 
 int read_lidar() {
       int reading = 0;
-    
+      Serial.println("Starting to read");
       Wire.beginTransmission((int)LIDARLite_ADDRESS); // transmit to LIDAR-Lite
       Wire.write((int)RegisterMeasure); // sets register pointer to  (0x00)  
       Wire.write((int)MeasureValue); // sets register pointer to  (0x00)  
       Wire.endTransmission(); // stop transmitting
-    
+      Serial.println("Stopped transmitting first byte");    
       delay(20); // Wait 20ms for transmit
     
       Wire.beginTransmission((int)LIDARLite_ADDRESS); // transmit to LIDAR-Lite
       Wire.write((int)RegisterHighLowB); // sets register pointer to (0x8f)
       Wire.endTransmission(); // stop transmitting
+      Serial.println("Stopped transmitting second byte");    
     
       delay(20); // Wait 20ms for transmit
     
       Wire.requestFrom((int)LIDARLite_ADDRESS, 2); // request 2 bytes from LIDAR-Lite
-    
+      Serial.println("Requested two bytes");    
+      
       if(2 <= Wire.available()) // if two bytes were received
       {
         reading = Wire.read(); // receive high byte (overwrites previous reading)
         reading = reading << 8; // shift high byte to be high 8 bits
         reading |= Wire.read(); // receive low byte as lower 8 bits
+        Serial.println(reading);
         return reading;
       }
 }
@@ -119,6 +125,7 @@ void aim (float angle){
 
 
 void setup() {  
+  Wire.begin(); // join i2c bus
   Serial.begin(9600); // start serial communication at 9600bps
   
   left_edge = 1500 - 0.5*SCAN_ANGLE;
